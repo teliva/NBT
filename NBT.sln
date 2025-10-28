@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34607.119
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NBT", "NBT.csproj", "{B6059976-39DE-484D-9FBC-FBB6C686C0FE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B6059976-39DE-484D-9FBC-FBB6C686C0FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6059976-39DE-484D-9FBC-FBB6C686C0FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6059976-39DE-484D-9FBC-FBB6C686C0FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6059976-39DE-484D-9FBC-FBB6C686C0FE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BAEEB7FC-6BB7-4C6F-9B8D-833665780976}
+	EndGlobalSection
+EndGlobal
