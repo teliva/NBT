@@ -37,7 +37,7 @@ public class ApiController : ControllerBase
         if (!Directory.Exists(uploadsFolder))
             Directory.CreateDirectory(uploadsFolder);
 
-        var uniqueName = $"Img_Out";
+        var uniqueName = $"Img_Out.png";
         var filePath = Path.Combine(uploadsFolder, uniqueName);
 
 
@@ -64,20 +64,18 @@ public class ApiController : ControllerBase
 
         // Call Gemini API
         GeminiImagePromptClient gipc = new GeminiImagePromptClient(_config["App:ApiKey"]);
-        try
+        
+        byte[] imgBytesBack = await gipc.GenerateAsync(imageBytes, request.Text);
+
+        var uniqueNameBack = "Img_Back.png";
+        var filePathBack = Path.Combine(uploadsFolder, uniqueNameBack);
+
+        // Save to file
+        await using (var stream = new FileStream(filePathBack, FileMode.Create, FileAccess.Write, FileShare.None))
         {
-            await gipc.GenerateAsync(imageBytes, request.Text);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Error generating image: {ex.Message}");
+            await stream.WriteAsync(imgBytesBack, 0, imgBytesBack.Length);
         }
 
-        return Ok();
-    }
-
-    public async Task<IActionResult> ImageGenerate(byte[] img)
-    {
         return Ok();
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using NBT.Models;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 
@@ -51,61 +52,24 @@ public class GeminiImagePromptClient
         // Send request
         HttpResponseMessage response = await _httpClient.PostAsync(url, content);
         string responseBody = await response.Content.ReadAsStringAsync();
+        NanoBananaResponse result = JsonSerializer.Deserialize<NanoBananaResponse>(responseBody);
 
         if (!response.IsSuccessStatusCode)
         {
             Console.WriteLine("Error:");
-            Console.WriteLine(responseBody);
+            Console.WriteLine(JsonSerializer.Serialize(result));
             throw new ExternalException("Bad response from Nano Banana API");
         }
 
-        // Parse the base64 image data from the JSON
-        using var doc = JsonDocument.Parse(responseBody);
-        string? base64Output = null;
-
-        // Traverse JSON for "data" field
-        base64Output = FindLargeString(doc.RootElement);
-
-        if (string.IsNullOrEmpty(base64Output))
+        var b64Img = result?.Candidates[0].Content.Parts[0].InlineData.Data;
+        if (string.IsNullOrEmpty(b64Img))
         {
             Console.WriteLine("No image data found in response.");
             throw new Exception("Returned no image");
         }
 
         // Decode and save the image
-        byte[] outputImageBytes = Convert.FromBase64String(base64Output);
+        byte[] outputImageBytes = Convert.FromBase64String(b64Img);
         return outputImageBytes;
-    }
-
-    // Recursive method to find large string (likely base64 image)
-    string? FindLargeString(JsonElement element, int minLength = 1000)
-    {
-        switch (element.ValueKind)
-        {
-            case JsonValueKind.Object:
-                foreach (var prop in element.EnumerateObject())
-                {
-                    var result = FindLargeString(prop.Value, minLength);
-                    if (result != null) return result;
-                }
-                break;
-
-            case JsonValueKind.Array:
-                foreach (var item in element.EnumerateArray())
-                {
-                    var result = FindLargeString(item, minLength);
-                    if (result != null) return result;
-                }
-                break;
-
-            case JsonValueKind.String:
-                var str = element.GetString();
-                if (str != null && str.Length > minLength)
-                {
-                    return str;
-                }
-                break;
-        }
-        return null;
     }
 }
