@@ -54,7 +54,7 @@ const generate = async () => {
 
     const formData = new FormData();
     formData.append("Image", savedFileBlob, "uploaded-image.png");
-    formData.append("Text", "Some text here");
+    formData.append("Text", document.querySelector('#prompt-textarea').value);
 
     const response = await fetch("/api/generate", {
         method: "POST",

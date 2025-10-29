@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Mvc;
+using NBT.Models;
 using System.Text.Json;
 
 namespace NanoBananaBackend.Controllers;
@@ -54,7 +55,7 @@ public class ApiController : ControllerBase
         {
             await request.Image.CopyToAsync(stream);
         }
-        
+
         byte[] imageBytes;
         await using (var memoryStream = new MemoryStream())
         {
@@ -64,8 +65,19 @@ public class ApiController : ControllerBase
 
         // Call Gemini API
         GeminiImagePromptClient gipc = new GeminiImagePromptClient(_config["App:ApiKey"]);
-        
-        byte[] imgBytesBack = await gipc.GenerateAsync(imageBytes, request.Text);
+
+        NanoBananaResponse apiResponse = await gipc.GenerateAsync(imageBytes, request.Text);
+
+
+        var retB64 = apiResponse?.Candidates[0].Content.Parts[1].InlineData.Data;
+        if (string.IsNullOrEmpty(retB64))
+        {
+            Console.WriteLine("No image data found in response.");
+            throw new Exception("Returned no image");
+        }
+
+        // Decode and save the image
+        byte[] outputImageBytes = Convert.FromBase64String(retB64);
 
         var uniqueNameBack = "Img_Back.png";
         var filePathBack = Path.Combine(uploadsFolder, uniqueNameBack);
@@ -73,7 +85,7 @@ public class ApiController : ControllerBase
         // Save to file
         await using (var stream = new FileStream(filePathBack, FileMode.Create, FileAccess.Write, FileShare.None))
         {
-            await stream.WriteAsync(imgBytesBack, 0, imgBytesBack.Length);
+            await stream.WriteAsync(outputImageBytes, 0, outputImageBytes.Length);
         }
 
         return Ok();
