@@ -60,7 +60,7 @@ const generate = async () => {
         formData.append("Image", savedFileBlob, "uploaded-image.png");
         formData.append("Text", promptText);
 
-        const response = await fetch("/api/generate", {
+        const response = await fetch("www13.kisp.com/nbt/api/generate", {
             method: "POST",
             body: formData
         });
