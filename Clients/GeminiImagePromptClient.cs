@@ -1,24 +1,36 @@
 ﻿using NBT.Models;
-using System.Text;
 using System.Text.Json;
 
 public class GeminiImagePromptClient
 {
-    private readonly string _apiKey;
     private readonly HttpClient _httpClient;
 
-    public GeminiImagePromptClient(string apiKey)
+    private readonly JsonSerializerOptions _jsonOptions = new()
     {
-        _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
-        _httpClient = new HttpClient();
-        _httpClient.DefaultRequestHeaders.Add("x-goog-api-key", _apiKey);
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false
+    };
+
+    public GeminiImagePromptClient(HttpClient httpClient)
+    {
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
 
-    public async Task<NanoBananaResponse> GenerateAsync(byte[] imageBytes, string prompt)
+    public async Task<NanoBananaResponse?> GenerateAsync(
+        byte[] imageBytes, 
+        string prompt,
+        string mimeType = "image/jpg",
+        CancellationToken cancellationToken = default)
     {
+        if (imageBytes == null || imageBytes.Length == 0)
+            throw new ArgumentException("Image bytes cannot be null or empty.", nameof(imageBytes));
+        if (string.IsNullOrWhiteSpace(prompt))
+            throw new ArgumentException("Prompt cannot be null or empty.", nameof(prompt));
+
+
         string base64Image = Convert.ToBase64String(imageBytes);
 
-        var requestBody = new
+        var request = new
         {
             contents = new object[]
             {
@@ -40,18 +52,32 @@ public class GeminiImagePromptClient
             }
         };
 
-        string json = JsonSerializer.Serialize(requestBody);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        using var content = JsonContent.Create(request, options: _jsonOptions);
 
-        string url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent";
+        using var response = await _httpClient
+            .PostAsync("v1beta/models/gemini-2.5-flash-image:generateContent", content, cancellationToken)
+            .ConfigureAwait(false);
 
-        HttpResponseMessage response = await _httpClient.PostAsync(url, content);
-        string responseBody = await response.Content.ReadAsStringAsync();
+        var body = await response.Content
+            .ReadAsStringAsync(cancellationToken)
+            .ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new Exception("Bad response from Nano Banana API");
+            throw new HttpRequestException(
+                $"Gemini API request failed with status {response.StatusCode}: {body}");
         }
-        return JsonSerializer.Deserialize<NanoBananaResponse>(responseBody);
+
+        return JsonSerializer.Deserialize<NanoBananaResponse>(body, _jsonOptions);
+    }
+
+    private record GeminiRequest
+    {
+        public GeminiContent[] Contents { get; init; } = Array.Empty<GeminiContent>();
+    }
+
+    private record GeminiContent
+    {
+        public object[] Parts { get; init; } = Array.Empty<object>();
     }
 }

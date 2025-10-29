@@ -1,4 +1,5 @@
 let savedFileBlob = null; // store file for later upload
+const overlay = document.querySelector('#loading-overlay');
 
 document.querySelector("#generate-btn").addEventListener("click", (ev) => generate(ev));
 
@@ -52,20 +53,35 @@ const onImageDropped = (ev) => {
 const generate = async () => {
     if (!savedFileBlob) return;
 
-    const formData = new FormData();
-    formData.append("Image", savedFileBlob, "uploaded-image.png");
-    formData.append("Text", document.querySelector('#prompt-textarea').value);
+    try {
+        overlay.classList.remove('d-none');
+        const promptText = document.querySelector('#prompt-textarea')?.value || '';
+        const formData = new FormData();
+        formData.append("Image", savedFileBlob, "uploaded-image.png");
+        formData.append("Text", promptText);
 
-    const response = await fetch("/api/generate", {
-        method: "POST",
-        body: formData
-    });
+        const response = await fetch("/api/generate", {
+            method: "POST",
+            body: formData
+        });
 
-    const result = await response.json();
-    console.log(result);
-}
+        if (!response.ok) {
+            throw new Error(`Server responded with status ${response.status}`);
+        }
 
+        const imageBlob = await response.blob();
+        setRetImage(imageBlob);
+
+    } catch (error) {
+        console.error("Error generating image:", error);
+    } finally {
+        overlay.classList.add('d-none');
+    }
+};
+
+const setRetImage = (imageBlob) => {
+    const img = document.querySelector('#result-image');
+    img.src = URL.createObjectURL(imageBlob);
+};
 
 init();
-
-

@@ -26,9 +26,35 @@
         background-color: #f8f9fa;
         border-color: #0d6efd;
     }
+
+    #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(255, 255, 255, 0.8); /* semi-transparent white */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999; /* make sure it's on top */
+    }
+
+        #loading-overlay .spinner-border {
+            width: 6rem; /* larger size */
+            height: 6rem; /* larger size */
+            border-width: 0.8rem; /* thicker border */
+        }
+
+        #loading-overlay.d-none {
+            display: none;
+        }
 </style>
 
 <body>
+    <div class="alert alert-warning text-center m-3" role="alert">
+        ⚠️ Warning: Your uploaded images and prompt text are being logged for processing.
+    </div>
     <div class="d-flex">
         <div class="card p-3 m-3 col-5 bg-light">
             <div class="card-body">
@@ -59,6 +85,13 @@
                     <img id="result-image" class="img-fluid" style="max-height: 512px;">
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="d-none">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
     </div>
 </body>
